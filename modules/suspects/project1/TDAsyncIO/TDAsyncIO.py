@@ -1,7 +1,7 @@
 '''Info Header Start
 Name : TDAsyncIO
 Author : Wieland@AMB-ZEPH15
-Saveorigin : test.toe
+Saveorigin : AsyncIO_Dev.toe
 Saveversion : 2022.35320
 Info Header End'''
 """
@@ -29,9 +29,7 @@ THE SOFTWARE.
 """
 
 import asyncio
-from TDStoreTools import StorageManager
-TDF = op.TDModules.mod.TDFunctions
-
+from typing import Union, Awaitable, List
 class TDAsyncIO:
 	"""
 	TDAsyncIO description
@@ -40,14 +38,15 @@ class TDAsyncIO:
 		# The component to which this extension is attached
 		self.ownerComp = ownerComp
 
-		# Get the current event loop.
-		self.loop = asyncio.get_event_loop()
-		
-		# If the current event loop was closed, then create a new event loop.
-		if self.loop.is_closed():
-			self.loop = asyncio.new_event_loop()
-			asyncio.set_event_loop(self.loop)
 
+	@property
+	def loop(self):
+		loop = asyncio.get_event_loop()
+		if loop.is_closed():
+			loop = asyncio.new_event_loop()
+			asyncio.set_event_loop( loop )
+		return loop
+	
 	def __del__(self):
 		# Check this component is global OP or not.
 		if me.parent() == op.TDAsyncIO:
@@ -55,11 +54,11 @@ class TDAsyncIO:
             # Pending callbacks will be lost.
 			self.loop.close()
 	
-	def Run(self, coroutines):
-		for coroutine in coroutines:
+	def Run(self, coroutines:Union[ List[Awaitable], Awaitable]):
+		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
 			self.loop.create_task(coroutine)
 	
-	def Update(self):
+	def _Update(self):
 		self.loop.call_soon(self.loop.stop)
 		self.loop.run_forever()
 
