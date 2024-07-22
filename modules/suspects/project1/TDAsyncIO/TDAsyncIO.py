@@ -55,17 +55,21 @@ class TDAsyncIO:
 			self.loop.close()
 	
 	def Run(self, coroutines:Union[ List[Awaitable], Awaitable]):
+		returnTasks = []
 		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
-			self.loop.create_task(coroutine)
+			returnTasks.append( 
+				self.loop.create_task(coroutine)
+			)
+		return returnTasks
 	
 	def _Update(self):
 		self.loop.call_soon(self.loop.stop)
 		self.loop.run_forever()
 
-	def Cancel(self):
+	def Cancel(self, killList = [] ):
 		if sys.version_info[0] >= 3 and sys.version_info[1] >=7:
-			for task in asyncio.all_tasks(self.loop):
+			for task in killList or asyncio.all_tasks(self.loop):
 				task.cancel()
 		else:
-			for task in asyncio.Task.all_tasks(self.loop):
+			for task in killList or asyncio.Task.all_tasks(self.loop):
 				task.cancel()
