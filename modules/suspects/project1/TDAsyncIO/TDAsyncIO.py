@@ -2,7 +2,7 @@
 Name : TDAsyncIO
 Author : Wieland@AMB-ZEPH15
 Saveorigin : AsyncIO_Dev.toe
-Saveversion : 2022.35320
+Saveversion : 2023.12000
 Info Header End'''
 """
 TDAsyncIO - Utilities for asyncio library with TouchDesigner
@@ -40,7 +40,7 @@ class TDAsyncIO:
 
 
 	@property
-	def loop(self):
+	def Loop(self):
 		loop = asyncio.get_event_loop()
 		if loop.is_closed():
 			loop = asyncio.new_event_loop()
@@ -52,24 +52,25 @@ class TDAsyncIO:
 		if me.parent() == op.TDAsyncIO:
 			# Close the event loop. The loop must not be running.
             # Pending callbacks will be lost.
-			self.loop.close()
+			self.Loop.close()
 	
 	def Run(self, coroutines:Union[ List[Awaitable], Awaitable]):
 		returnTasks = []
 		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
 			returnTasks.append( 
-				self.loop.create_task(coroutine)
+				self.Loop.create_task(coroutine)
 			)
 		return returnTasks
 	
 	def _Update(self):
-		self.loop.call_soon(self.loop.stop)
-		self.loop.run_forever()
+		self.Loop.call_soon(self.Loop.stop)
+		self.Loop.run_forever()
+		
 
 	def Cancel(self, killList = [] ):
 		if sys.version_info[0] >= 3 and sys.version_info[1] >=7:
-			for task in killList or asyncio.all_tasks(self.loop):
+			for task in killList or asyncio.all_tasks(self.Loop):
 				task.cancel()
 		else:
-			for task in killList or asyncio.Task.all_tasks(self.loop):
+			for task in killList or asyncio.Task.all_tasks(self.Loop):
 				task.cancel()
