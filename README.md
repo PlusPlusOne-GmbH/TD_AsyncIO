@@ -14,27 +14,27 @@ TDAsyncIO.tox is a Component for using the asyncio module in TouchDesigner witho
     @property
     def Loop(self):
         """
-			Returns the Loop specified for this instance of TDAsyncIO.
-			Each instance of the COMP has itws own eventLoop.
-		"""
+	Returns the Loop specified for this instance of TDAsyncIO.
+	Each instance of the COMP has itws own eventLoop.
+	"""
         pass
 
     def RunSync(self, coroutines: Union[List[Awaitable], Awaitable]) -> List[Any]:
         """
-			Runs all passed routines concurrent, but stalls the process and returns the returnvalues as a list.
-		"""
+	Runs all passed routines concurrent, but stalls the process and returns the returnvalues as a list.
+	"""
         pass
 
     def RunAsync(self, coroutines: Union[List[Awaitable], Awaitable]) -> List[asyncio.Task]:
         """
-			Runs all routines concurrently and returns a list of tasks.
-		"""
+	Runs all routines concurrently and returns a list of tasks.
+	"""
         pass
 
     def Cancel(self, killList=[]):
         """
-			Cancels all tasks currently active or the defines task in the list.
-		"""
+	Cancels all tasks currently active or the defines task in the list.
+	"""
         pass
 ```
 
@@ -48,13 +48,20 @@ async def test():
     print('hello world')
 
 # Run coroutine
-coroutines = [test()]
-routineFutures = op("TDAsyncIo").RunAsync(coroutines)
+routineFutures = op("TDAsyncIO").RunAsync(test())
+routineResult = op("TDAsyncIO").RunSync(test())
 
-routineResult = op("TDAsyncIO").RunSync(coroutines)
+async def dealyedPrint(text):
+    await asyncio.sleep(1)
+    print(text)
+
+several = op("TDAsyncIO").RunAsync([
+    delayedPrint("Foo"), delayedPrint("Bar")
+])
+
 
 # Cancel all tasks
-op.TDAsyncIO.Cancel()
+op("TDAsyncIO").Cancel()
 ```
 <br>
 
