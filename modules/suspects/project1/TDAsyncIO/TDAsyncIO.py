@@ -29,7 +29,8 @@ THE SOFTWARE.
 """
 
 import asyncio
-from typing import Union, Awaitable, List
+from typing import Union, Awaitable, List, Any
+
 class TDAsyncIO:
 	"""
 	TDAsyncIO description
@@ -37,24 +38,47 @@ class TDAsyncIO:
 	def __init__(self, ownerComp):
 		# The component to which this extension is attached
 		self.ownerComp = ownerComp
+		self._Loop = None
 
+	def setNewLoop(self):
+		self._Loop = asyncio.new_event_loop()
+		return self._Loop
 
 	@property
 	def Loop(self):
-		loop = asyncio.get_event_loop()
+		loop = self._Loop or self.setNewLoop()
 		if loop.is_closed():
-			loop = asyncio.new_event_loop()
-			asyncio.set_event_loop( loop )
+			loop = self.setNewLoop()
 		return loop
 	
-	def __del__(self):
-		# Check this component is global OP or not.
-		if me.parent() == op.TDAsyncIO:
-			# Close the event loop. The loop must not be running.
-            # Pending callbacks will be lost.
-			self.Loop.close()
+	def _Update(self):
+		# Evaluating if call_soon is really needed.
+		# self.Loop.call_soon(self.Loop.stop) 
+
+		"""
+			If stop() is called while run_forever() is running, 
+			the loop will run the current batch of callbacks 
+			and then exit. 
+			Note that new callbacks scheduled by callbacks will not run in this case; 
+			instead, they will run the next time run_forever() or run_until_complete() is called.
+		"""
+		self.Loop.stop()
+		self.Loop.run_forever()
+		
+
+	def __delTD__(self):
+		self.Loop.close()
 	
-	def Run(self, coroutines:Union[ List[Awaitable], Awaitable]):
+	def RunSync(self, coroutines:Union[ List[Awaitable], Awaitable], timeout = 0) -> List[Any]:
+		returnData = []
+		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
+			returnData.append(
+				self.Loop.run_until_complete( coroutine )
+			)
+		return returnData
+			
+
+	def RunAsync(self, coroutines:Union[ List[Awaitable], Awaitable]) -> List[asyncio.Task]:
 		returnTasks = []
 		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
 			returnTasks.append( 
@@ -62,15 +86,8 @@ class TDAsyncIO:
 			)
 		return returnTasks
 	
-	def _Update(self):
-		self.Loop.call_soon(self.Loop.stop)
-		self.Loop.run_forever()
-		
+
 
 	def Cancel(self, killList = [] ):
-		if sys.version_info[0] >= 3 and sys.version_info[1] >=7:
-			for task in killList or asyncio.all_tasks(self.Loop):
-				task.cancel()
-		else:
-			for task in killList or asyncio.Task.all_tasks(self.Loop):
-				task.cancel()
+		for task in killList or asyncio.all_tasks(self.Loop):
+			task.cancel()
