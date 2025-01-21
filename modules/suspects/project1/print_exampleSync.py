@@ -5,11 +5,12 @@ Saveorigin : AsyncIO_Dev.toe
 Saveversion : 2023.12000
 Info Header End'''
 from asyncio import sleep
-async def say(word):
+from datetime import datetime
+async def say(word, fifoOp):
 	for index in range(2):
-		op("fifo1").appendRow([word, index, absTime.seconds])
+		fifoOp.appendRow([word, index, datetime.now().second])
 		await sleep(1)
 
 
-coroutines = [say("Foobar")]
-op.TDAsyncIO.RunSync(coroutines)
+coroutines = [say("Foobar", op("fifo1")), say("Foobar", op("fifo2"))]
+op("TDAsyncIO").RunSync(coroutines)

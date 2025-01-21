@@ -12,4 +12,4 @@ async def say(word):
 
 
 coroutines = [say("Foobar")]
-op.TDAsyncIO.RunAsync(coroutines)
+op("TDAsyncIO").RunAsync(coroutines)

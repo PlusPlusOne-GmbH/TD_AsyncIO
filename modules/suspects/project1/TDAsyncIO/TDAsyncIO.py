@@ -46,6 +46,10 @@ class TDAsyncIO:
 
 	@property
 	def Loop(self):
+		"""
+			Returns the Loop specified for this instance of TDAsyncIO.
+			Each instance of the COMP has itws own eventLoop.
+		"""
 		loop = self._Loop or self.setNewLoop()
 		if loop.is_closed():
 			loop = self.setNewLoop()
@@ -69,16 +73,23 @@ class TDAsyncIO:
 	def __delTD__(self):
 		self.Loop.close()
 	
-	def RunSync(self, coroutines:Union[ List[Awaitable], Awaitable], timeout = 0) -> List[Any]:
+	def RunSync(self, coroutines:Union[ List[Awaitable], Awaitable] ) -> List[Any]:
+		"""
+			Runs all passed routines concurrent, but stalls the process and returns the returnvalues as a list.
+		"""
 		returnData = []
-		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
-			returnData.append(
-				self.Loop.run_until_complete( coroutine )
-			)
-		return returnData
+		_routines = coroutines if type(coroutines) is list else [coroutines]
+		return self.Loop.run_until_complete( 
+					asyncio.gather(
+						*[ self.Loop.create_task( routine ) for routine in _routines] 
+					) 
+				)
 			
 
 	def RunAsync(self, coroutines:Union[ List[Awaitable], Awaitable]) -> List[asyncio.Task]:
+		"""
+			Runs all routines concurrently and returns a list of tasks.
+		"""
 		returnTasks = []
 		for coroutine in coroutines if type(coroutines) is list else [coroutines]:
 			returnTasks.append( 
@@ -89,5 +100,8 @@ class TDAsyncIO:
 
 
 	def Cancel(self, killList = [] ):
+		"""
+			Cancels all tasks currently active or the defines task in the list.
+		"""
 		for task in killList or asyncio.all_tasks(self.Loop):
 			task.cancel()
