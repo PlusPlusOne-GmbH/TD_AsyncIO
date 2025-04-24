@@ -1,6 +1,6 @@
 '''Info Header Start
 Name : TDAsyncIO
-Author : Wieland@AMB-ZEPH15
+Author : Wieland PlusPlusOne@AMB-ZEPH15
 Saveorigin : AsyncIO_Dev.toe
 Saveversion : 2023.12000
 Info Header End'''
@@ -8,6 +8,7 @@ Info Header End'''
 TDAsyncIO - Utilities for asyncio library with TouchDesigner
 
 Copyright (C) 2021 Motoki Sonoda
+Copyright (C) 2025 PlusPlusOne GmbH
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +30,11 @@ THE SOFTWARE.
 """
 
 import asyncio
+from asyncio import AbstractEventLoop, Task
 from typing import Union, Awaitable, List, Any
+
+
+import cookbook
 
 class TDAsyncIO:
 	"""
@@ -39,13 +44,14 @@ class TDAsyncIO:
 		# The component to which this extension is attached
 		self.ownerComp = ownerComp
 		self._Loop = None
+		self.Cookbook = cookbook
 
 	def setNewLoop(self):
 		self._Loop = asyncio.new_event_loop()
 		return self._Loop
 
 	@property
-	def Loop(self):
+	def Loop(self) -> AbstractEventLoop:
 		"""
 			Returns the Loop specified for this instance of TDAsyncIO.
 			Each instance of the COMP has itws own eventLoop.
@@ -73,9 +79,9 @@ class TDAsyncIO:
 	def __delTD__(self):
 		self.Loop.close()
 	
-	def RunSync(self, coroutines:Union[ List[Awaitable], Awaitable] ) -> List[Any]:
+	def RunSync(self, coroutines:Union[ List[Awaitable], Awaitable] ) -> List[any]:
 		"""
-			Runs all passed routines concurrent, but stalls the process and returns the returnvalues as a list.
+			Runs all passed routines concurrent, but waits for compleation and returns the returnvalues as a list.
 		"""
 		returnData = []
 		_routines = coroutines if type(coroutines) is list else [coroutines]
@@ -86,7 +92,7 @@ class TDAsyncIO:
 				)
 			
 
-	def RunAsync(self, coroutines:Union[ List[Awaitable], Awaitable]) -> List[asyncio.Task]:
+	def RunAsync(self, coroutines:Union[ List[Awaitable], Awaitable]) -> List[Task]:
 		"""
 			Runs all routines concurrently and returns a list of tasks.
 		"""
@@ -99,7 +105,7 @@ class TDAsyncIO:
 	
 
 
-	def Cancel(self, killList = [] ):
+	def Cancel(self, killList:List[Task] = [] ):
 		"""
 			Cancels all tasks currently active or the defines task in the list.
 		"""
